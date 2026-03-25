@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Game CONGBDay</title>
+<title>Game Idol Merge</title>
 <style>
   body {
     margin: 0;
@@ -115,13 +115,30 @@ canvas.addEventListener("mousemove", (e) => {
 });
 
 // 📱 Mobile
+canvas.addEventListener("touchstart", (e) => {
+  if (gameOver) return;
+
+  const x = getX(e);
+
+  if (!isAiming) {
+    // 🔥 chạm lần 1 → di chuyển bóng tới vị trí đó
+    currentBall.x = x;
+    isAiming = true;
+  } else {
+    // 🔥 chạm lần 2 → thả bóng
+    balls.push(currentBall);
+    currentBall = new Ball(canvas.width / 2, 50, 0);
+    isAiming = false;
+  }
+
+  e.preventDefault();
+}, { passive: false });
 canvas.addEventListener("touchmove", (e) => {
-  if (!gameOver) {
+  if (!gameOver && isAiming) {
     currentBall.x = getX(e);
   }
-  e.preventDefault(); // 🔥 chống scroll
+  e.preventDefault();
 }, { passive: false });
-
 function dropBall() {
   if (gameOver) return;
 
