@@ -115,6 +115,24 @@ canvas.addEventListener("mousemove", (e) => {
 });
 
 // 📱 Mobile
+
+canvas.addEventListener("touchmove", (e) => {
+  if (!gameOver && isAiming) {
+    currentBall.x = getX(e);
+  }
+  e.preventDefault();
+}, { passive: false });
+function dropBall() {
+  if (gameOver) return;
+
+  balls.push(currentBall);
+  currentBall = new Ball(canvas.width / 2, 50, 0);
+}
+
+// PC
+canvas.addEventListener("click", dropBall);
+
+// 📱 Mobile
 canvas.addEventListener("touchstart", (e) => {
   if (gameOver) return;
 
@@ -133,28 +151,6 @@ canvas.addEventListener("touchstart", (e) => {
 
   e.preventDefault();
 }, { passive: false });
-canvas.addEventListener("touchmove", (e) => {
-  if (!gameOver && isAiming) {
-    currentBall.x = getX(e);
-  }
-  e.preventDefault();
-}, { passive: false });
-function dropBall() {
-  if (gameOver) return;
-
-  balls.push(currentBall);
-  currentBall = new Ball(canvas.width / 2, 50, 0);
-}
-
-// PC
-canvas.addEventListener("click", dropBall);
-
-// 📱 Mobile
-/*canvas.addEventListener("touchstart", (e) => {
-  dropBall();
-  e.preventDefault();
-}, { passive: false });*/
-
 function checkMerge() {
   for (let i = 0; i < balls.length; i++) {
     for (let j = i + 1; j < balls.length; j++) {
