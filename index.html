@@ -1,19 +1,31 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta charset="UTF-8">
 <title>Game Idol Merge</title>
 <style>
   body {
-    margin: 0;
-    overflow: hidden;
-    background: #111;
-  }
-  canvas {
-    display: block;
-    margin: auto;
-    background: #222;
-  }
+  margin: 0;
+  background: #111;
+  overflow: hidden;
+  touch-action: none;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+canvas {
+  background: #222;
+  display: block;
+
+  /* 🔥 full màn nhưng giữ tỉ lệ */
+  width: 100vw;
+  height: auto;
+  max-height: 100vh;
+}
 </style>
 </head>
 <body>
@@ -27,8 +39,9 @@ const ctx = canvas.getContext("2d");
 canvas.width = 280;
 canvas.height = 470;
 
-const GRAVITY = 0.5;
-const SCALE = 1.2; // 🔥 giảm lại cho hợp màn nhỏ
+
+const GRAVITY = 0.8; // 🔥 rơi mượt, ít rung
+const SCALE = 1;    // 🔥 kích thước chuẩn, không quá to// 🔥 giảm lại cho hợp màn nhỏ
 
 let balls = [];
 let gameOver = false;
@@ -78,17 +91,33 @@ class Ball {
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.clip();
-    ctx.drawImage(this.img, this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
+    //ctx.drawImage(this.img, this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
+    // 🔥 Cắt ảnh thành hình vuông (center crop)
+const minSize = Math.min(this.img.width, this.img.height);
+
+const sx = (this.img.width - minSize) / 2;
+const sy = (this.img.height - minSize) / 2;
+
+ctx.drawImage(
+  this.img,
+  sx,
+  sy,
+  minSize,
+  minSize,
+  this.x - this.radius,
+  this.y - this.radius,
+  this.radius * 2,
+  this.radius * 2
+);
     ctx.restore();
   }
 }
 
 let currentBall = new Ball(canvas.width / 2, 50, 0);
-
+let isTouching = false;
 function getX(e) {
   const rect = canvas.getBoundingClientRect();
-
-  const scaleX = canvas.width / rect.width; // 🔥 tỉ lệ scale
+  const scaleX = canvas.width / rect.width;
 
   const clientX = e.touches
     ? e.touches[0].clientX
@@ -96,58 +125,66 @@ function getX(e) {
 
   return (clientX - rect.left) * scaleX;
 }
-function getY(e) {
-  const rect = canvas.getBoundingClientRect();
 
-  const scaleY = canvas.height / rect.height;
-
-  const clientY = e.touches
-    ? e.touches[0].clientY
-    : e.clientY;
-
-  return (clientY - rect.top) * scaleY;
-}
 // PC
 canvas.addEventListener("mousemove", (e) => {
   if (!gameOver) {
     currentBall.x = getX(e);
+
+    // 🔥 chặn ra ngoài
+    currentBall.x = Math.max(
+      currentBall.radius,
+      Math.min(canvas.width - currentBall.radius, currentBall.x)
+    );
   }
 });
 
 // 📱 Mobile
 
 canvas.addEventListener("touchmove", (e) => {
-  if (!gameOver && isAiming) {
-    currentBall.x = getX(e);
+  if (!gameOver && isTouching) {
+    const x = getX(e);
+
+    currentBall.x = Math.max(
+      currentBall.radius,
+      Math.min(canvas.width - currentBall.radius, x)
+    );
   }
   e.preventDefault();
 }, { passive: false });
-function dropBall() {
+// PC
+canvas.addEventListener("mousedown", (e) => {
   if (gameOver) return;
+
+  currentBall.x = getX(e); // 🔥 fix lệch vị trí
 
   balls.push(currentBall);
   currentBall = new Ball(canvas.width / 2, 50, 0);
-}
-
-// PC
-canvas.addEventListener("click", dropBall);
+});
 
 // 📱 Mobile
+canvas.addEventListener("touchend", () => {
+  if (gameOver) return;
+
+  if (isTouching) {
+    balls.push(currentBall);
+    currentBall = new Ball(canvas.width / 2, 50, 0);
+  }
+
+  isTouching = false;
+});
 canvas.addEventListener("touchstart", (e) => {
   if (gameOver) return;
 
+  isTouching = true;
+
   const x = getX(e);
 
-  if (!isAiming) {
-    // 🔥 chạm lần 1 → di chuyển bóng tới vị trí đó
-    currentBall.x = x;
-    isAiming = true;
-  } else {
-    // 🔥 chạm lần 2 → thả bóng
-    balls.push(currentBall);
-    currentBall = new Ball(canvas.width / 2, 50, 0);
-    isAiming = false;
-  }
+  // 🔥 di chuyển ngay khi chạm
+  currentBall.x = Math.max(
+    currentBall.radius,
+    Math.min(canvas.width - currentBall.radius, x)
+  );
 
   e.preventDefault();
 }, { passive: false });
@@ -226,6 +263,34 @@ function resolveCollision() {
     }
   }
 }
+/*function resizeCanvas() {
+  const ratio = canvas.height / canvas.width;
+
+  const displayWidth = 280;
+  const displayHeight = displayWidth * ratio;
+
+  canvas.style.width = displayWidth + "px";
+  canvas.style.height = displayHeight + "px";
+}*/
+function resizeCanvas() {
+  const ratio = canvas.height / canvas.width;
+
+  let w = window.innerWidth;
+  let h = w * ratio;
+
+  if (h > window.innerHeight) {
+    h = window.innerHeight;
+    w = h / ratio;
+  }
+
+  canvas.style.width = w + "px";
+  canvas.style.height = h + "px";
+}
+
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
 function keepInBounds(ball) {
   // chặn trái
   if (ball.x - ball.radius < 0) {
