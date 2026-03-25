@@ -1,0 +1,26 @@
+body {
+  margin: 0;
+  overflow: hidden;
+  background: #111;
+  touch-action: none; /* 🔥 cực quan trọng */
+}
+body {
+  margin: 0;
+  overflow: hidden;
+  background: #111;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+
+  touch-action: none;
+}
+
+canvas {
+  background: #222;
+
+  width: 280px;   /* 🔥 THU NHỎ Ở ĐÂY */
+  height: 470px;  /* giữ tỉ lệ 350x590 */
+  border-radius: 12px;
+}
