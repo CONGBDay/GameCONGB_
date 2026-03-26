@@ -54,7 +54,9 @@ const images = [
   "CONGB.4.jpg",
  "CONGB.5.jpg",
   "CONGB.6.jpg",
-  "CONGB.7.jpg"
+  "CONGB.7.jpg",
+  "CONGB.8.jpg",
+  "CONGB.9.jpg"
 ];
 
 class Ball {
@@ -211,7 +213,7 @@ function checkMerge() {
         balls.splice(i, 1);
         balls.push(newBall);
 
-        if (newBall.level >= 7) {
+        if (newBall.level >= 9) {
           alert("🎉 Bạn thắng!");
           gameOver = true;
         }
